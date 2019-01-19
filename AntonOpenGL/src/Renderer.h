@@ -1,7 +1,8 @@
 #pragma once
-#include <GLEW/glew.h>
+#include <glew.h>
 #include <iostream>
-
+#include <fstream>
+#define GL_LOG_FILE "gl.log"
 
 // no fucking clue what this stuff does
 // its macro magic
@@ -34,8 +35,16 @@ static bool GLLogCall(const char* function, const char* filename, int line)
 	{
 		std::cout << "[OpenGL Error] (" << error << ") " << function
 			<< " " << filename << ": " << line << std::endl;
+
+		std::ofstream file;
+
+		file.open(GL_LOG_FILE, std::ios::app);
+		file << "[OpenGL Error] (" << error << ") " << function
+			<< " " << filename << ": " << line << std::endl;
+
 		return false;
 	}
+
 	return true;
 }
 

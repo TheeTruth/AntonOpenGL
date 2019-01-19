@@ -3,12 +3,14 @@
 #include "Shader.h"
 #include <iostream>
 #include "Window.h"
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
+#include "Renderer.h"
 
 int main() {
 
 	Window window(800, 600, "OpenGL");
 	window.Init();
-	log_gl_params();
 
 	/* start GLEW extension handler */
 	glewExperimental = GL_TRUE;
@@ -27,6 +29,12 @@ int main() {
 	-0.5f,  0.5f, 0.0f   // top left 
 	};
 
+	GLfloat colors[] = {
+		1.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 1.0f
+	};
+
 	unsigned int indices[] = {  // note that we start from 0!
 	0, 1, 3,  // first Triangle
 	1, 2, 3   // second Triangle
@@ -40,57 +48,67 @@ int main() {
 	1, 2, 3
 	};
 
-	GLuint vao1, vao2, vbo, ebo1, ebo2;
+	GLuint vao1, vao2, vertices_vbo, colors_vbo, ebo1, ebo2;
 	glGenVertexArrays(1, &vao1);
 	glGenVertexArrays(1, &vao2);
-	glGenBuffers(1, &vbo);
-	glGenBuffers(1, &ebo1);
-	glGenBuffers(1, &ebo2);
+	GLCall(glGenBuffers(1, &vertices_vbo));
+	GLCall(glGenBuffers(1, &colors_vbo));
+	GLCall(glGenBuffers(1, &ebo1));
+	GLCall(glGenBuffers(1, &ebo2));
+
 
 	// bind VAO1 to bring it into focus in the statemachine
-	glBindVertexArray(vao1);
+	GLCall(glBindVertexArray(vao1));
 	
 	/* a vertex buffer object (VBO) is created here. this stores an array of
 	data on the graphics adapter's memory. in our case - the vertex points */
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	//VertexBuffer vbo(vertices, 9);
+	//vbo.Bind();
+	GLCall(glBindBuffer(GL_ARRAY_BUFFER, vertices_vbo));
+	GLCall(glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW));
+
+	//GLCall(glBindBuffer(GL_ARRAY_BUFFER, colors_vbo));
+	//GLCall(glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW));
 
 	// Index Buffer Object
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo1);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(tri_one), tri_one, GL_STATIC_DRAW);
+	//IndexBuffer ibo(indices, 6);
+	//ibo.Bind();
+	GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo1));
+	GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(tri_one), tri_one, GL_STATIC_DRAW));
 
-	// Set up the VAO
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	 //Set up the VAO
+	GLCall(glEnableVertexAttribArray(0));
+	GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL));
+
+	//GLCall(glEnableVertexAttribArray(1));
+	//GLCall(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL));
 
 	// bind VAO2 to bring it into focus in the state machine
-	glBindVertexArray(vao2);
+	GLCall(glBindVertexArray(vao2));
 
 	// Index Buffer Object
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo2);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(tri_two), tri_two, GL_STATIC_DRAW);
+	GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo2));
+	GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(tri_two), tri_two, GL_STATIC_DRAW));
 
 	// set up the VAO
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	GLCall(glEnableVertexAttribArray(0));
+	GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL));
+
+
 
 	Shader shader1("Shaders/Vertex.shader", "Shaders/Fragment.shader");
 	Shader shader2("Shaders/Vertex.shader", "Shaders/Fragment2.shader");
-
-	bool b = restart_gl_log();
-
-	std::cout << "restart_gl_log() " << b << std::endl;
 
 	while (!window.Closed())
 	{
 		window.Clear(.5f, .5f, .5f);
 		shader1.Use();
 		//glDrawArrays(GL_TRIANGLES, 0, 3);
-		glBindVertexArray(vao1);
-		glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
+		GLCall(glBindVertexArray(vao1));
+		GLCall(glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0));
 		shader2.Use();
-		glBindVertexArray(vao2);
-		glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
+		GLCall(glBindVertexArray(vao2));
+		GLCall(glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0));
 		window.Update();
 
 	}
