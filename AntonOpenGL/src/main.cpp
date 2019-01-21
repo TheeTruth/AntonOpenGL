@@ -1,5 +1,4 @@
 #include <glew.h>
-#include <glfw3.h>
 #include "Shader.h"
 #include <iostream>
 #include "Window.h"
@@ -29,19 +28,26 @@ int main() {
 	-0.5f,  0.5f, 0.0f   // top left 
 	};
 
+	float vert2[] = {
+	-0.5f, -0.5f,
+	0.0f, 0.5f,
+	0.5f, -0.5f
+		
+	};
+
 	GLfloat colors[] = {
 		1.0f, 0.0f, 0.0f,
 		0.0f, 1.0f, 0.0f,
 		0.0f, 0.0f, 1.0f
 	};
 
-	unsigned int indices[] = {  // note that we start from 0!
-	0, 1, 3,  // first Triangle
-	1, 2, 3   // second Triangle
-	};
+	//unsigned int indices[] = {  // note that we start from 0!
+	//0, 1, 3,  // first Triangle
+	//1, 2, 3   // second Triangle
+	//};
 
 	unsigned int tri_one[] = {
-	0, 1, 3
+	0, 1, 2
 	};
 
 	unsigned int tri_two[] = {
@@ -50,65 +56,65 @@ int main() {
 
 	GLuint vao1, vao2, vertices_vbo, colors_vbo, ebo1, ebo2;
 	glGenVertexArrays(1, &vao1);
-	glGenVertexArrays(1, &vao2);
-	GLCall(glGenBuffers(1, &vertices_vbo));
-	GLCall(glGenBuffers(1, &colors_vbo));
-	GLCall(glGenBuffers(1, &ebo1));
-	GLCall(glGenBuffers(1, &ebo2));
-
+	//glGenVertexArrays(1, &vao2);
 
 	// bind VAO1 to bring it into focus in the statemachine
 	GLCall(glBindVertexArray(vao1));
 	
 	/* a vertex buffer object (VBO) is created here. this stores an array of
 	data on the graphics adapter's memory. in our case - the vertex points */
-	//VertexBuffer vbo(vertices, 9);
-	//vbo.Bind();
-	GLCall(glBindBuffer(GL_ARRAY_BUFFER, vertices_vbo));
-	GLCall(glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW));
+	VertexBuffer vbo_points(vertices, sizeof(vertices));
+	 //Set up the VAO
+	GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL));
+
+
+	VertexBuffer vbo_colors(colors, sizeof(colors));
+	GLCall(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL));
+
+	GLCall(glEnableVertexAttribArray(0));
+	GLCall(glEnableVertexAttribArray(1));
 
 	//GLCall(glBindBuffer(GL_ARRAY_BUFFER, colors_vbo));
 	//GLCall(glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW));
 
-	// Index Buffer Object
-	//IndexBuffer ibo(indices, 6);
-	//ibo.Bind();
-	GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo1));
-	GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(tri_one), tri_one, GL_STATIC_DRAW));
+	 //Index Buffer Object
+	IndexBuffer ibo(tri_two, 3);
 
-	 //Set up the VAO
-	GLCall(glEnableVertexAttribArray(0));
-	GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL));
+
+
+
+#pragma region triangle2
 
 	//GLCall(glEnableVertexAttribArray(1));
 	//GLCall(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL));
 
 	// bind VAO2 to bring it into focus in the state machine
-	GLCall(glBindVertexArray(vao2));
+	//GLCall(glBindVertexArray(vao2));
 
 	// Index Buffer Object
-	GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo2));
-	GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(tri_two), tri_two, GL_STATIC_DRAW));
+	//GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo2));
+	//GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(tri_two), tri_two, GL_STATIC_DRAW));
 
 	// set up the VAO
-	GLCall(glEnableVertexAttribArray(0));
-	GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL));
+	//GLCall(glEnableVertexAttribArray(0));
+	//GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL));
 
+#pragma endregion triangle2
 
 
 	Shader shader1("Shaders/Vertex.shader", "Shaders/Fragment.shader");
-	Shader shader2("Shaders/Vertex.shader", "Shaders/Fragment2.shader");
+	//Shader shader2("Shaders/Vertex.shader", "Shaders/Fragment2.shader");
 
 	while (!window.Closed())
 	{
 		window.Clear(.5f, .5f, .5f);
 		shader1.Use();
-		//glDrawArrays(GL_TRIANGLES, 0, 3);
 		GLCall(glBindVertexArray(vao1));
+		//glDrawArrays(GL_TRIANGLES, 0, 3);
 		GLCall(glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0));
-		shader2.Use();
-		GLCall(glBindVertexArray(vao2));
-		GLCall(glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0));
+		//shader2.Use();
+		//GLCall(glBindVertexArray(vao2));
+		//GLCall(glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0));
 		window.Update();
 
 	}
