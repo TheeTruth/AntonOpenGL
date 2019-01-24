@@ -20,6 +20,10 @@ int main() {
 	glEnable(GL_DEPTH_TEST); /* enable depth-testing */
 	/* with LESS depth-testing interprets a smaller depth value as meaning "closer" */
 	glDepthFunc(GL_LESS);
+	glEnable(GL_CULL_FACE); // cull face
+	glCullFace(GL_BACK); // cull back face
+	glFrontFace(GL_CW); // GL_CCW for counter clock-wise
+
 
 	float vertices[] = {
 	 0.5f,  0.5f, 0.0f,  // top right
@@ -29,10 +33,9 @@ int main() {
 	};
 
 	float vert2[] = {
-	-0.5f, -0.5f,
-	0.0f, 0.5f,
-	0.5f, -0.5f
-		
+	-0.5f, -0.5f, 0.0f,
+	0.0f, 0.5f, 0.0f,
+	0.5f, -0.5f, 0.0f
 	};
 
 	GLfloat colors[] = {
@@ -40,11 +43,6 @@ int main() {
 		0.0f, 1.0f, 0.0f,
 		0.0f, 0.0f, 1.0f
 	};
-
-	//unsigned int indices[] = {  // note that we start from 0!
-	//0, 1, 3,  // first Triangle
-	//1, 2, 3   // second Triangle
-	//};
 
 	unsigned int tri_one[] = {
 	0, 1, 2
@@ -54,8 +52,16 @@ int main() {
 	1, 2, 3
 	};
 
+	GLfloat matrix[] = {
+	  1.0f, 0.0f, 0.0f, 0.0f, // first column 
+	  0.0f, 1.0f, 0.0f, 0.0f, // second column 
+	  0.0f, 0.0f, 1.0f, 0.0f, // third column 
+	  0.5f, 0.0f, 0.0f, 1.0f // fourth column 
+	};
+
 	GLuint vao1, vao2, vertices_vbo, colors_vbo, ebo1, ebo2;
 	glGenVertexArrays(1, &vao1);
+	glGenBuffers(1, &vertices_vbo);
 	//glGenVertexArrays(1, &vao2);
 
 	// bind VAO1 to bring it into focus in the statemachine
@@ -63,23 +69,16 @@ int main() {
 	
 	/* a vertex buffer object (VBO) is created here. this stores an array of
 	data on the graphics adapter's memory. in our case - the vertex points */
-	VertexBuffer vbo_points(vertices, sizeof(vertices));
-	 //Set up the VAO
+
+	VertexBuffer vbo_points(vert2, sizeof(vert2));
 	GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL));
-
-
 	VertexBuffer vbo_colors(colors, sizeof(colors));
 	GLCall(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL));
+	
+	IndexBuffer ibo(tri_one, 3);
 
 	GLCall(glEnableVertexAttribArray(0));
 	GLCall(glEnableVertexAttribArray(1));
-
-	//GLCall(glBindBuffer(GL_ARRAY_BUFFER, colors_vbo));
-	//GLCall(glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW));
-
-	 //Index Buffer Object
-	IndexBuffer ibo(tri_two, 3);
-
 
 
 
@@ -104,6 +103,10 @@ int main() {
 
 	Shader shader1("Shaders/Vertex.shader", "Shaders/Fragment.shader");
 	//Shader shader2("Shaders/Vertex.shader", "Shaders/Fragment2.shader");
+
+	int model_matrix_location = glGetUniformLocation(shader1.ID, "model_matrix");
+	shader1.Use();
+	glUniformMatrix4fv(model_matrix_location, 1, GL_FALSE, matrix);
 
 	while (!window.Closed())
 	{

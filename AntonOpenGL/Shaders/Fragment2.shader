@@ -1,10 +1,10 @@
 #version 330 core
 
 // this is the color this shader will output
-out vec4 v4color;
+out vec4 frag_color;
 
 void main()
 {
-	vec3 color = vec3(0, 1, 0);
-	v4color = vec4(color, 1.0f);
+	frag_color = vec4(1.0f, 1.0f, 0.0f, 1.0f);
+	//v4color = vec4(color, 1.0f);
 }

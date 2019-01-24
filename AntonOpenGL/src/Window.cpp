@@ -80,7 +80,14 @@ void Window::ProcessInput()
 		glfwSetWindowShouldClose(m_window, true);
 	if (glfwGetKey(m_window, GLFW_KEY_ENTER) == GLFW_PRESS)
 		glfwSetWindowShouldClose(m_window, true);
+	if (glfwGetKey(m_window, GLFW_KEY_UP) == GLFW_PRESS)
+		glfwSetWindowShouldClose(m_window, true);
+	if (glfwGetKey(m_window, GLFW_KEY_LEFT) == GLFW_KEY_DOWN)
+		std::cout << "Left" << std::endl;
+	if (glfwGetKey(m_window, GLFW_KEY_RIGHT) == GLFW_KEY_DOWN)
+		std::cout << "Right" << std::endl;
 }
+
 void Window::Update()
 {
 	ProcessInput();

@@ -259,6 +259,12 @@ public:
 		glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
 	}
 
+	void SetMatrix4fv(const std::string &name, GLsizei count, GLboolean transpose, const GLfloat* matrix_data) const
+	{
+		const GLint matrix_location = glGetUniformLocation(ID, name.c_str());
+		glUniformMatrix4fv(matrix_location, count, transpose, matrix_data);
+	}
+
 private:
 	// utility function for checking shader compilation/linking errors.
 	// ------------------------------------------------------------------------
@@ -286,3 +292,5 @@ private:
 		}
 	}
 };
+
+
