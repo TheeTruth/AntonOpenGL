@@ -1,7 +1,7 @@
 #include "Texture.h"
 #include "Renderer.h"
 #include <iostream>
-#include <GLEW/glew.h>
+#include <glew.h>
 #include <string>
 #include "vendor/stb_image.h"
 

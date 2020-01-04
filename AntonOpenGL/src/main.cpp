@@ -1,14 +1,35 @@
 #include <glew.h>
-#include "Shader.h"
+#include <glfw3.h>
+
 #include <iostream>
+#include <cmath>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include "Shader.h"
 #include "Window.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 #include "Renderer.h"
+#include "Texture.h"
+#include "Camera.h"
+#include "Mesh.h"
+#include "benny/transform.h"
+
+
+
+#define WIDTH 1280
+#define HEIGHT 720
+
+double deltaTime = 0;
+double lastTime = 0;
+Camera camera;
+bool Camera::lock_camera = false;
 
 int main() {
 
-	Window window(800, 600, "OpenGL");
+	Window window(WIDTH, HEIGHT, "OpenGL");
 	window.Init();
 
 	/* start GLEW extension handler */
@@ -20,106 +41,282 @@ int main() {
 	glEnable(GL_DEPTH_TEST); /* enable depth-testing */
 	/* with LESS depth-testing interprets a smaller depth value as meaning "closer" */
 	glDepthFunc(GL_LESS);
-	glEnable(GL_CULL_FACE); // cull face
-	glCullFace(GL_BACK); // cull back face
-	glFrontFace(GL_CW); // GL_CCW for counter clock-wise
+	//glEnable(GL_CULL_FACE); // cull face
+	//glCullFace(GL_BACK); // cull back face
+	//glFrontFace(GL_CW); // GL_CCW for counter clock-wise
+
 
 
 	float vertices[] = {
-	 0.5f,  0.5f, 0.0f,  // top right
-	 0.5f, -0.5f, 0.0f,  // bottom right
-	-0.5f, -0.5f, 0.0f,  // bottom left
-	-0.5f,  0.5f, 0.0f   // top left 
+		//positions			 texture coords 
+		 0.5f,  0.5f, 0.0f,  1.0f, 1.0f,	// top right
+		 0.5f, -0.5f, 0.0f,  1.0f, 0.0f,	// bottom right
+		-0.5f, -0.5f, 0.0f,  0.0f, 0.0f,	// bottom left
+		-0.5f,  0.5f, 0.0f,  0.0f, 1.0f,	// top left 
+											//
+		 0.5f,  0.5f, 1.0f,  1.0f, 1.0f,	// back top right
+		 0.5f, -0.5f, 1.0f,  1.0f, 0.0f,	// back bottom right
+		-0.5f, -0.5f, 1.0f,  0.0f, 0.0f,	// back bottom left
+		-0.5f,  0.5f, 1.0f,  0.0f, 1.0f		// back top left
 	};
 
-	float vert2[] = {
-	-0.5f, -0.5f, 0.0f,
-	0.0f, 0.5f, 0.0f,
-	0.5f, -0.5f, 0.0f
+	float vertices2[] = {
+		//positions			 texture coords		normals
+		 0.5f,  0.5f, 0.0f,  1.0f, 1.0f,	0.0f, 0.0f, -1.f,// top right
+		 0.5f, -0.5f, 0.0f,  1.0f, 0.0f,	0.0f, 0.0f, -1.f,// bottom right
+		-0.5f, -0.5f, 0.0f,  0.0f, 0.0f,	0.0f, 0.0f, -1.f,// bottom left
+		-0.5f,  0.5f, 0.0f,  0.0f, 1.0f,	0.0f, 0.0f, -1.f, // top left 
+											  		
+		 0.5f,  0.5f, 1.0f,  1.0f, 1.0f,	0.0f, 0.0f, -1.f,// back top right
+		 0.5f, -0.5f, 1.0f,  1.0f, 0.0f,	0.0f, 0.0f, -1.f,// back bottom right
+		-0.5f, -0.5f, 1.0f,  0.0f, 0.0f,	0.0f, 0.0f, -1.f,// back bottom left
+		-0.5f,  0.5f, 1.0f,  0.0f, 1.0f,	0.0f, 0.0f, -1.f // back top left
 	};
 
-	GLfloat colors[] = {
-		1.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f,
-		0.0f, 0.0f, 1.0f
+
+	unsigned int indices[] = {
+		0, 1, 3, // front face
+		1, 2, 3, // front face
+
+		4, 5, 7, // back face
+		5, 6, 7 // back face
 	};
 
-	unsigned int tri_one[] = {
-	0, 1, 2
+	// set up vertex data (and buffer(s)) and configure vertex attributes
+		// ------------------------------------------------------------------
+	float light_vertices[] = {
+		-0.5f, -0.5f, -0.5f,
+		 0.5f, -0.5f, -0.5f,
+		 0.5f,  0.5f, -0.5f,
+		 0.5f,  0.5f, -0.5f,
+		-0.5f,  0.5f, -0.5f,
+		-0.5f, -0.5f, -0.5f,
+
+		-0.5f, -0.5f,  0.5f,
+		 0.5f, -0.5f,  0.5f,
+		 0.5f,  0.5f,  0.5f,
+		 0.5f,  0.5f,  0.5f,
+		-0.5f,  0.5f,  0.5f,
+		-0.5f, -0.5f,  0.5f,
+
+		-0.5f,  0.5f,  0.5f,
+		-0.5f,  0.5f, -0.5f,
+		-0.5f, -0.5f, -0.5f,
+		-0.5f, -0.5f, -0.5f,
+		-0.5f, -0.5f,  0.5f,
+		-0.5f,  0.5f,  0.5f,
+
+		 0.5f,  0.5f,  0.5f,
+		 0.5f,  0.5f, -0.5f,
+		 0.5f, -0.5f, -0.5f,
+		 0.5f, -0.5f, -0.5f,
+		 0.5f, -0.5f,  0.5f,
+		 0.5f,  0.5f,  0.5f,
+
+		-0.5f, -0.5f, -0.5f,
+		 0.5f, -0.5f, -0.5f,
+		 0.5f, -0.5f,  0.5f,
+		 0.5f, -0.5f,  0.5f,
+		-0.5f, -0.5f,  0.5f,
+		-0.5f, -0.5f, -0.5f,
+
+		-0.5f,  0.5f, -0.5f,
+		 0.5f,  0.5f, -0.5f,
+		 0.5f,  0.5f,  0.5f,
+		 0.5f,  0.5f,  0.5f,
+		-0.5f,  0.5f,  0.5f,
+		-0.5f,  0.5f, -0.5f,
 	};
 
-	unsigned int tri_two[] = {
-	1, 2, 3
+
+	unsigned int size = sizeof(indices) / sizeof(indices[0]);
+	Vertex cube_vertices[] =
+	{
+		Vertex(glm::vec3(-1, -1, -1), glm::vec2(1, 0), glm::vec3(0, 0, -1)),
+		Vertex(glm::vec3(-1, 1, -1), glm::vec2(0, 0), glm::vec3(0, 0, -1)),
+		Vertex(glm::vec3(1, 1, -1), glm::vec2(0, 1), glm::vec3(0, 0, -1)),
+		Vertex(glm::vec3(1, -1, -1), glm::vec2(1, 1), glm::vec3(0, 0, -1)),
+
+		Vertex(glm::vec3(-1, -1, 1), glm::vec2(1, 0), glm::vec3(0, 0, 1)),
+		Vertex(glm::vec3(-1, 1, 1), glm::vec2(0, 0), glm::vec3(0, 0, 1)),
+		Vertex(glm::vec3(1, 1, 1), glm::vec2(0, 1), glm::vec3(0, 0, 1)),
+		Vertex(glm::vec3(1, -1, 1), glm::vec2(1, 1), glm::vec3(0, 0, 1)),
+
+		Vertex(glm::vec3(-1, -1, -1), glm::vec2(0, 1), glm::vec3(0, -1, 0)),
+		Vertex(glm::vec3(-1, -1, 1), glm::vec2(1, 1), glm::vec3(0, -1, 0)),
+		Vertex(glm::vec3(1, -1, 1), glm::vec2(1, 0), glm::vec3(0, -1, 0)),
+		Vertex(glm::vec3(1, -1, -1), glm::vec2(0, 0), glm::vec3(0, -1, 0)),
+
+		Vertex(glm::vec3(-1, 1, -1), glm::vec2(0, 1), glm::vec3(0, 1, 0)),
+		Vertex(glm::vec3(-1, 1, 1), glm::vec2(1, 1), glm::vec3(0, 1, 0)),
+		Vertex(glm::vec3(1, 1, 1), glm::vec2(1, 0), glm::vec3(0, 1, 0)),
+		Vertex(glm::vec3(1, 1, -1), glm::vec2(0, 0), glm::vec3(0, 1, 0)),
+
+		Vertex(glm::vec3(-1, -1, -1), glm::vec2(1, 1), glm::vec3(-1, 0, 0)),
+		Vertex(glm::vec3(-1, -1, 1), glm::vec2(1, 0), glm::vec3(-1, 0, 0)),
+		Vertex(glm::vec3(-1, 1, 1), glm::vec2(0, 0), glm::vec3(-1, 0, 0)),
+		Vertex(glm::vec3(-1, 1, -1), glm::vec2(0, 1), glm::vec3(-1, 0, 0)),
+
+		Vertex(glm::vec3(1, -1, -1), glm::vec2(1, 1), glm::vec3(1, 0, 0)),
+		Vertex(glm::vec3(1, -1, 1), glm::vec2(1, 0), glm::vec3(1, 0, 0)),
+		Vertex(glm::vec3(1, 1, 1), glm::vec2(0, 0), glm::vec3(1, 0, 0)),
+		Vertex(glm::vec3(1, 1, -1), glm::vec2(0, 1), glm::vec3(1, 0, 0)),
 	};
 
-	GLfloat matrix[] = {
-	  1.0f, 0.0f, 0.0f, 0.0f, // first column 
-	  0.0f, 1.0f, 0.0f, 0.0f, // second column 
-	  0.0f, 0.0f, 1.0f, 0.0f, // third column 
-	  0.5f, 0.0f, 0.0f, 1.0f // fourth column 
+	unsigned int cube_indices[] = { 0, 1, 2,
+							  0, 2, 3,
+
+							  6, 5, 4,
+							  7, 6, 4,
+
+							  10, 9, 8,
+							  11, 10, 8,
+
+							  12, 13, 14,
+							  12, 14, 15,
+
+							  16, 17, 18,
+							  16, 18, 19,
+
+							  22, 21, 20,
+							  23, 22, 20
 	};
 
-	GLuint vao1, vao2, vertices_vbo, colors_vbo, ebo1, ebo2;
-	glGenVertexArrays(1, &vao1);
-	glGenBuffers(1, &vertices_vbo);
-	//glGenVertexArrays(1, &vao2);
+	//gets the array size
+	unsigned int indices_size = sizeof(cube_indices) / sizeof(cube_indices[0]);
+	unsigned int vertices_size = sizeof(cube_vertices) / sizeof(cube_vertices[0]);
 
-	// bind VAO1 to bring it into focus in the statemachine
-	GLCall(glBindVertexArray(vao1));
-	
-	/* a vertex buffer object (VBO) is created here. this stores an array of
-	data on the graphics adapter's memory. in our case - the vertex points */
+	Mesh mesh(cube_vertices, vertices_size, cube_indices, indices_size);
+	mesh.PrintPos();
+	// projection matrix: ortho - 4:3 aspect ratio
+	//glm::mat4 projection = glm::ortho(-1.0f, 1.0f, -.75f, .75f, -1.0f, 1.0f);
+	glm::mat4 projection = glm::perspective(glm::radians(65.0f), (float)window.GetWidth() / (float)window.GetHeight(), 0.1f, 100.0f);
+	camera = Camera(glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f), -30.0f, 10.0f, 5.0f, 0.1f);
 
-	VertexBuffer vbo_points(vert2, sizeof(vert2));
-	GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL));
-	VertexBuffer vbo_colors(colors, sizeof(colors));
-	GLCall(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL));
-	
-	IndexBuffer ibo(tri_one, 3);
+	glm::mat4 objectModel = glm::mat4(1.0f);
+	glm::mat4 lightModel = glm::mat4(1.0f);
+	glm::vec3 xAxis(1.0f, 0.0f, 0.0f);
+	glm::vec3 yAxis(0.0f, 1.0f, 0.0f);
+	glm::vec3 zAxis(0.0f, 0.0f, 1.0f);
+;
+	Transform objectTransform;
+	Transform lightTransform;
+	glm::mat4 view = glm::mat4(1.0f);
+	//view = camera.CalculateViewMatrix();
 
+	//transform.SetPos();
+
+	GLuint light_vao, object_vao;
+	GLCall(glGenVertexArrays(1, &light_vao));
+	GLCall(glGenVertexArrays(1, &object_vao));
+
+	#pragma region light
+
+	GLCall(glBindVertexArray(light_vao));
+	VertexBuffer light_vbo(light_vertices, sizeof(light_vertices));
+	//light_vbo.Bind();
+	GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0));
 	GLCall(glEnableVertexAttribArray(0));
+
+	#pragma endregion light
+	   
+
+	#pragma region object
+
+	GLCall(glBindVertexArray(object_vao));
+
+	// Position attribute
+	VertexBuffer vbo_points2(vertices2, sizeof(vertices2));
+	GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0));
+	GLCall(glEnableVertexAttribArray(0));
+
+	// texture coord attribute
+	VertexBuffer vbo_texture(vertices2, sizeof(vertices2));
+	GLCall(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))));
 	GLCall(glEnableVertexAttribArray(1));
 
+	VertexBuffer vbo_normals(vertices2, sizeof(vertices2));
+	GLCall(glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float))));
+	GLCall(glEnableVertexAttribArray(2));
 
+	IndexBuffer indexBuffer(indices, size);
 
-#pragma region triangle2
+#pragma endregion object
 
-	//GLCall(glEnableVertexAttribArray(1));
-	//GLCall(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL));
+	// Texture
+	Texture texture("Res/wall.jpg");
 
-	// bind VAO2 to bring it into focus in the state machine
-	//GLCall(glBindVertexArray(vao2));
+	Shader lightShader("Shaders/LightVertex.shader", "Shaders/LightFragment.shader");
+	Shader texShader("Shaders/VertTexture.shader", "Shaders/FragTexture.shader");
 
-	// Index Buffer Object
-	//GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo2));
-	//GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(tri_two), tri_two, GL_STATIC_DRAW));
+	glm::mat4 mvp = projection * view * objectModel;
 
-	// set up the VAO
-	//GLCall(glEnableVertexAttribArray(0));
-	//GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL));
-
-#pragma endregion triangle2
-
-
-	Shader shader1("Shaders/Vertex.shader", "Shaders/Fragment.shader");
-	//Shader shader2("Shaders/Vertex.shader", "Shaders/Fragment2.shader");
-
-	int model_matrix_location = glGetUniformLocation(shader1.ID, "model_matrix");
-	shader1.Use();
-	glUniformMatrix4fv(model_matrix_location, 1, GL_FALSE, matrix);
-
+	float start_time = glfwGetTime();
+	
 	while (!window.Closed())
 	{
 		window.Clear(.5f, .5f, .5f);
-		shader1.Use();
-		GLCall(glBindVertexArray(vao1));
-		//glDrawArrays(GL_TRIANGLES, 0, 3);
-		GLCall(glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0));
-		//shader2.Use();
-		//GLCall(glBindVertexArray(vao2));
-		//GLCall(glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0));
+
+		double now = glfwGetTime();
+		deltaTime = now - lastTime;
+		lastTime = now;
+
+		float zRot = cosf(now);
+
+		camera.KeyControl(window.getsKeys(), deltaTime);
+		camera.MouseControl(window.getXChange(), window.getYChange());
+
+		projection = glm::perspective(glm::radians(45.0f), (float)window.GetWidth()/ (float)window.GetHeight(), 0.1f, 100.0f);
+		view = camera.CalculateViewMatrix();
+
+		// Get the object transform
+		auto scale_value = glm::vec3(window.GetScaleSliderValue());
+		objectTransform.SetScale(scale_value);
+		auto rotation_value = window.GetRotationSliderValue();
+		objectTransform.SetRot(rotation_value);
+		auto translation_value = window.GetTranslationSliderValue();
+		objectTransform.SetPos(translation_value);
+
+		// Get the light transform
+		auto lightColor = window.GetLightColorSliderValue();
+		auto lightScale = glm::vec3(window.GetLightScaleSliderValue());
+		auto lightPosition = window.GetLightTranslationSliderValue();
+		lightTransform.SetScale(lightScale);
+		lightTransform.SetPos(lightPosition);
+			   
+		objectModel = objectTransform.GetModel();
+		mvp = projection * view * objectModel;
+
+		// Draw the object
+		texShader.Use();
+		//glm::vec3 lightColor = glm::vec3(0.2f, 0.2f, 0.2f);
+		texShader.SetVec3fv("lightColor", 1, glm::value_ptr(lightColor));
+		texShader.SetMatrix4fv("u_MVP", 1, GL_FALSE, glm::value_ptr(mvp));
+		GLCall(glBindVertexArray(object_vao));
+		GLCall(glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0));
+
+		// Draw the light
+		//auto lightPos = glm::vec3(3.0f, 0.0f, 5.0f);
+		//auto lightScale = glm::vec3(0.5f, 0.5f, 0.5f);
+		//lightTransform.SetPos(lightPosition);
+		//lightTransform.SetScale(lightScale);
+		lightModel = lightTransform.GetModel();
+		mvp = projection * view * lightModel;
+		lightShader.Use();
+		lightShader.SetMatrix4fv("u_MVP", 1, GL_FALSE, glm::value_ptr(mvp));
+		GLCall(glBindVertexArray(light_vao));
+		GLCall(glDrawArrays(GL_TRIANGLES, 0, 36));
+
 		window.Update();
 
 	}
 	return 0;
 }
+
+
+
+
+
+
+
+

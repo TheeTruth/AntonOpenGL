@@ -8,6 +8,7 @@
 //#include <cerrno>
 #include <cstdarg>
 #include <ctime>
+#include "Renderer.h"
 #define GL_LOG_FILE "gl.log"
 
 
@@ -246,24 +247,30 @@ public:
 	// ------------------------------------------------------------------------
 	void SetBool(const std::string &name, bool value) const
 	{
-		glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value);
+		GLCall(glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value));
 	}
 	// ------------------------------------------------------------------------
 	void SetInt(const std::string &name, int value) const
 	{
-		glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
+		GLCall(glUniform1i(glGetUniformLocation(ID, name.c_str()), value));
 	}
 	// ------------------------------------------------------------------------
 	void SetFloat(const std::string &name, float value) const
 	{
-		glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
+		GLCall(glUniform1f(glGetUniformLocation(ID, name.c_str()), value));
 	}
 
 	void SetMatrix4fv(const std::string &name, GLsizei count, GLboolean transpose, const GLfloat* matrix_data) const
 	{
 		const GLint matrix_location = glGetUniformLocation(ID, name.c_str());
-		glUniformMatrix4fv(matrix_location, count, transpose, matrix_data);
+		GLCall(glUniformMatrix4fv(matrix_location, count, transpose, matrix_data));
 	}
+	void SetVec3fv(const std::string& name, GLsizei count, const GLfloat* vector) const
+	{
+		const GLint vector_location = glGetUniformLocation(ID, name.c_str());
+		glUniform3fv(vector_location, count, vector);
+	}
+
 
 private:
 	// utility function for checking shader compilation/linking errors.
