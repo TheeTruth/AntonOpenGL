@@ -554,12 +554,10 @@
     <ClInclude Include="src\vendor\benny\transform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Model.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\Fragment.shader" />
+    <None Include="Shaders\Fragment2.shader" />
     <None Include="src\vendor\glm\detail\func_common.inl">
       <Filter>Header Files</Filter>
     </None>
@@ -912,10 +910,9 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="Shaders\Vertex.shader" />
+    <None Include="Shaders\Vertex2.shader" />
     <None Include="Shaders\VertTexture.shader" />
     <None Include="Shaders\FragTexture.shader" />
-    <None Include="Shaders\LightFragment.shader" />
-    <None Include="Shaders\LightVertex.shader" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="gl.log" />
