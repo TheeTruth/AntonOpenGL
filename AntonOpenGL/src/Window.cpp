@@ -299,6 +299,7 @@ void Window::handleKeys(GLFWwindow* window, int key, int code, int action, int m
 	{
 		glfwSetWindowShouldClose(window, GL_TRUE);
 	}
+
 	if (key == GLFW_KEY_LEFT_CONTROL && action == GLFW_PRESS)
 	{
 		if (theWindow->GetMouseHidden())

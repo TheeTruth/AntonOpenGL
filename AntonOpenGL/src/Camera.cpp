@@ -56,15 +56,6 @@ void Camera::KeyControl(bool* keys, GLfloat deltaTime)
 		up = glm::vec3(0.0f, 1.0f, 0.0f);
 		Update();
 	}
-
-
-	if (keys[GLFW_KEY_ENTER])
-	{
-		std::cout << "Camera Y (Yaw): " << yaw << std::endl;
-		std::cout << "Camera X (Pitch) " << pitch << std::endl;
-		std::cout << "Position " << position.x << " " << position.y << " " << position.z << std::endl;
-		std:: cout << "Front " << front.x << " " << front.y << " " << front.z << std::endl;
-	}
 }
 
 void Camera::MouseControl(GLfloat xChange, GLfloat yChange)

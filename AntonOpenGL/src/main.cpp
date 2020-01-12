@@ -14,7 +14,7 @@
 #include "Renderer.h"
 #include "Texture.h"
 #include "Camera.h"
-#include "Mesh.h"
+#include "benny/mesh.h"
 #include "benny/transform.h"
 
 
@@ -187,18 +187,17 @@ int main() {
 	unsigned int vertices_size = sizeof(cube_vertices) / sizeof(cube_vertices[0]);
 
 	Mesh mesh(cube_vertices, vertices_size, cube_indices, indices_size);
-	mesh.PrintPos();
 	// projection matrix: ortho - 4:3 aspect ratio
 	//glm::mat4 projection = glm::ortho(-1.0f, 1.0f, -.75f, .75f, -1.0f, 1.0f);
 	glm::mat4 projection = glm::perspective(glm::radians(65.0f), (float)window.GetWidth() / (float)window.GetHeight(), 0.1f, 100.0f);
-	camera = Camera(glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f), -30.0f, 10.0f, 5.0f, 0.1f);
+	camera = Camera(glm::vec3(0.0f, 0.0f, -2.0f), glm::vec3(0.0f, 1.0f, 0.0f), -30.0f, 10.0f, 5.0f, 0.1f);
 
 	glm::mat4 objectModel = glm::mat4(1.0f);
 	glm::mat4 lightModel = glm::mat4(1.0f);
 	glm::vec3 xAxis(1.0f, 0.0f, 0.0f);
 	glm::vec3 yAxis(0.0f, 1.0f, 0.0f);
 	glm::vec3 zAxis(0.0f, 0.0f, 1.0f);
-;
+
 	Transform objectTransform;
 	Transform lightTransform;
 	glm::mat4 view = glm::mat4(1.0f);
@@ -206,40 +205,40 @@ int main() {
 
 	//transform.SetPos();
 
-	GLuint light_vao, object_vao;
-	GLCall(glGenVertexArrays(1, &light_vao));
-	GLCall(glGenVertexArrays(1, &object_vao));
+		GLuint light_vao, object_vao;
+		GLCall(glGenVertexArrays(1, &light_vao));
+		GLCall(glGenVertexArrays(1, &object_vao));
 
-	#pragma region light
+#pragma region light
 
-	GLCall(glBindVertexArray(light_vao));
-	VertexBuffer light_vbo(light_vertices, sizeof(light_vertices));
-	//light_vbo.Bind();
-	GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0));
-	GLCall(glEnableVertexAttribArray(0));
+		GLCall(glBindVertexArray(light_vao));
+		VertexBuffer light_vbo(light_vertices, sizeof(light_vertices));
+		//light_vbo.Bind();
+		GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0));
+		GLCall(glEnableVertexAttribArray(0));
 
-	#pragma endregion light
-	   
+#pragma endregion light
 
-	#pragma region object
 
-	GLCall(glBindVertexArray(object_vao));
+#pragma region object
 
-	// Position attribute
-	VertexBuffer vbo_points2(vertices2, sizeof(vertices2));
-	GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0));
-	GLCall(glEnableVertexAttribArray(0));
+		GLCall(glBindVertexArray(object_vao));
+		std::cout << "sizeof(vertices2) " << sizeof(vertices2) << std::endl;
+		// Position attribute
+		VertexBuffer vbo_points2(vertices2, sizeof(vertices2));
+		GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0));
+		GLCall(glEnableVertexAttribArray(0));
 
-	// texture coord attribute
-	VertexBuffer vbo_texture(vertices2, sizeof(vertices2));
-	GLCall(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))));
-	GLCall(glEnableVertexAttribArray(1));
+		// texture coord attribute
+		VertexBuffer vbo_texture(vertices2, sizeof(vertices2));
+		GLCall(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))));
+		GLCall(glEnableVertexAttribArray(1));
 
-	VertexBuffer vbo_normals(vertices2, sizeof(vertices2));
-	GLCall(glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float))));
-	GLCall(glEnableVertexAttribArray(2));
+		VertexBuffer vbo_normals(vertices2, sizeof(vertices2));
+		GLCall(glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float))));
+		GLCall(glEnableVertexAttribArray(2));
 
-	IndexBuffer indexBuffer(indices, size);
+		IndexBuffer indexBuffer(indices, size);
 
 #pragma endregion object
 
@@ -248,6 +247,10 @@ int main() {
 
 	Shader lightShader("Shaders/LightVertex.shader", "Shaders/LightFragment.shader");
 	Shader texShader("Shaders/VertTexture.shader", "Shaders/FragTexture.shader");
+	Shader bennyShader("Shaders/benny/basicShader.vs", "Shaders/benny/basicShader.fs");
+
+	Mesh box("res/testBoxNoUV.obj");
+	Mesh monkey("res/monkey3.obj");
 
 	glm::mat4 mvp = projection * view * objectModel;
 
@@ -261,7 +264,7 @@ int main() {
 		deltaTime = now - lastTime;
 		lastTime = now;
 
-		float zRot = cosf(now);
+		float zRot = sinf(now);
 
 		camera.KeyControl(window.getsKeys(), deltaTime);
 		camera.MouseControl(window.getXChange(), window.getYChange());
@@ -270,17 +273,18 @@ int main() {
 		view = camera.CalculateViewMatrix();
 
 		// Get the object transform
-		auto scale_value = glm::vec3(window.GetScaleSliderValue());
+		glm::vec3 scale_value = glm::vec3(window.GetScaleSliderValue());
+		glm::vec3 rotation_value = window.GetRotationSliderValue();
+		glm::vec3 translation_value = window.GetTranslationSliderValue();
 		objectTransform.SetScale(scale_value);
-		auto rotation_value = window.GetRotationSliderValue();
 		objectTransform.SetRot(rotation_value);
-		auto translation_value = window.GetTranslationSliderValue();
 		objectTransform.SetPos(translation_value);
 
+
 		// Get the light transform
-		auto lightColor = window.GetLightColorSliderValue();
-		auto lightScale = glm::vec3(window.GetLightScaleSliderValue());
-		auto lightPosition = window.GetLightTranslationSliderValue();
+		glm::vec3 lightColor = window.GetLightColorSliderValue();
+		glm::vec3 lightScale = glm::vec3(window.GetLightScaleSliderValue());
+		glm::vec3 lightPosition = window.GetLightTranslationSliderValue();
 		lightTransform.SetScale(lightScale);
 		lightTransform.SetPos(lightPosition);
 			   
@@ -289,27 +293,28 @@ int main() {
 
 		// Draw the object
 		texShader.Use();
-		//glm::vec3 lightColor = glm::vec3(0.2f, 0.2f, 0.2f);
+		texShader.SetVec3fv("model", 1, glm::value_ptr(objectModel));
+		texShader.SetVec3fv("lightPosition", 1, glm::value_ptr(lightPosition));
 		texShader.SetVec3fv("lightColor", 1, glm::value_ptr(lightColor));
 		texShader.SetMatrix4fv("u_MVP", 1, GL_FALSE, glm::value_ptr(mvp));
-		GLCall(glBindVertexArray(object_vao));
-		GLCall(glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0));
+		//mesh.Draw();
+		monkey.Draw();
+		//GLCall(glBindVertexArray(object_vao));
+		//GLCall(glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0));
 
 		// Draw the light
-		//auto lightPos = glm::vec3(3.0f, 0.0f, 5.0f);
-		//auto lightScale = glm::vec3(0.5f, 0.5f, 0.5f);
-		//lightTransform.SetPos(lightPosition);
-		//lightTransform.SetScale(lightScale);
 		lightModel = lightTransform.GetModel();
 		mvp = projection * view * lightModel;
 		lightShader.Use();
 		lightShader.SetMatrix4fv("u_MVP", 1, GL_FALSE, glm::value_ptr(mvp));
 		GLCall(glBindVertexArray(light_vao));
 		GLCall(glDrawArrays(GL_TRIANGLES, 0, 36));
+		//mesh.Draw();
 
 		window.Update();
 
 	}
+
 	return 0;
 }
 

@@ -31,10 +31,13 @@ class Mesh
 public:
 	Mesh(const std::string& fileName);
 	Mesh(Vertex* vertices, unsigned int numVertices, unsigned int* indices, unsigned int numIndices);
-	Model GetModel() { return model; }
-	void PrintPos();
+	Model GetModel() { return m_model; }
+	void InitMesh();
+	void Draw();
 
 private:
-	Model model;
+	unsigned int m_numVertices, m_numIndices;
+	Model m_model;
+	GLuint m_vao;
 };
 

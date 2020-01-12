@@ -126,8 +126,9 @@
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\IndexBuffer.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\Texture.cpp" />
+    <ClCompile Include="src\vendor\benny\mesh.cpp" />
+    <ClCompile Include="src\vendor\benny\obj_loader.cpp" />
     <ClCompile Include="src\vendor\glm\detail\glm.cpp" />
     <ClCompile Include="src\vendor\imgui\imgui.cpp" />
     <ClCompile Include="src\vendor\imgui\imgui_demo.cpp" />
@@ -145,6 +146,8 @@
     <ClInclude Include="src\Renderer.h" />
     <ClInclude Include="src\Shader.h" />
     <ClInclude Include="src\Texture.h" />
+    <ClInclude Include="src\vendor\benny\mesh.h" />
+    <ClInclude Include="src\vendor\benny\obj_loader.h" />
     <ClInclude Include="src\vendor\benny\transform.h" />
     <ClInclude Include="src\vendor\glm\common.hpp" />
     <ClInclude Include="src\vendor\glm\detail\compute_common.hpp" />
@@ -307,7 +310,9 @@
   <ItemGroup>
     <None Include="Shaders\Fragment.shader" />
     <None Include="Shaders\Fragment2.shader" />
+    <None Include="Shaders\FragTexture.shader" />
     <None Include="Shaders\Vertex.shader" />
+    <None Include="Shaders\VertTexture.shader" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="gl.log" />
